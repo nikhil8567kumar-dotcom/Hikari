@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Hikari AI — Nikhil's Personal Companion</title>
+    <title>Hikari AI — Nikhil's Companion</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0d0914; }
-        .glass-panel { background: rgba(26, 18, 38, 0.85); backdrop-filter: blur(14px); border: 1px solid rgba(255, 120, 180, 0.15); }
+        .glass-panel { background: rgba(26, 18, 38, 0.88); backdrop-filter: blur(14px); border: 1px solid rgba(255, 120, 180, 0.15); }
         .chat-bubble-hikari { background: #1e152a; border: 1px solid rgba(255, 110, 170, 0.2); }
         .chat-bubble-nikhil { background: linear-gradient(135deg, #a83268, #d4497e); }
         ::-webkit-scrollbar { width: 4px; }
@@ -69,7 +69,7 @@
                 "Reel script hook do" 🎬
             </button>
             <button onclick="quickSend('Aaj discipline follow karne mein laziness aa rahi hai, practical solution do')" class="whitespace-nowrap px-3 py-1.5 rounded-full bg-purple-900/40 border border-purple-500/20 text-pink-200">
-                "Workout & discipline fix" ⚡
+                "Discipline fix" ⚡
             </button>
         </div>
 
@@ -91,17 +91,22 @@
     <div id="settingsModal" class="hidden fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4">
         <div class="glass-panel w-full max-w-md p-6 rounded-3xl space-y-4">
             <h3 class="font-bold text-lg text-pink-300">Hikari AI Settings ⚙️</h3>
-            <p class="text-xs text-gray-300 leading-relaxed">
-                Nikhil, apni Google AI Studio API key yahan daal do. Key save hote hi 404 error solve ho jayega aur Hikari har topic par detail mein natural Hinglish mein baat karegi!
-            </p>
             
             <div>
-                <label class="block text-xs font-semibold text-purple-200 mb-1">Gemini API Key:</label>
-                <input type="password" id="geminiKeyInput" placeholder="AIzaSy..." 
+                <label class="block text-xs font-semibold text-purple-200 mb-1">Provider Type:</label>
+                <select id="providerSelect" class="w-full bg-[#120b1b] border border-purple-500/40 rounded-xl p-2.5 text-xs text-white outline-none">
+                    <option value="gemini">Google Gemini API (AI Studio Key)</option>
+                    <option value="openrouter">OpenRouter Free (Free Gemini 2.0 / Llama)</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-purple-200 mb-1">API Key:</label>
+                <input type="password" id="apiKeyInput" placeholder="Paste your API key here..." 
                        class="w-full bg-[#120b1b] border border-purple-500/40 rounded-xl p-2.5 text-xs text-white outline-none">
-                <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-[11px] text-pink-400 underline mt-1 inline-block">
-                    Free API key yahan se generate karein (Google AI Studio)
-                </a>
+                <p class="text-[11px] text-gray-400 mt-1">
+                    Gemini Key: starts with <code>AIzaSy...</code> | OpenRouter Key: starts with <code>sk-or-v1...</code>
+                </p>
             </div>
 
             <div>
@@ -120,8 +125,8 @@
 
     <!-- Application Script -->
     <script>
-        // --- State Variables ---
-        let apiKey = localStorage.getItem("HIKARI_GEMINI_KEY") || "";
+        let apiKey = localStorage.getItem("HIKARI_API_KEY") || "";
+        let apiProvider = localStorage.getItem("HIKARI_PROVIDER") || "gemini";
         let voiceEnabled = true;
         let selectedVoice = null;
         let isSpeaking = false;
@@ -157,7 +162,7 @@
             ctx.arc(cx, cy - 10, r * 1.05, Math.PI, 0);
             ctx.stroke();
 
-            // Hair pin clip
+            // Hair Pin
             ctx.fillStyle = "#ff6584";
             ctx.beginPath();
             ctx.arc(cx - 65, cy - 60, 9, 0, Math.PI * 2);
@@ -178,7 +183,7 @@
             ctx.ellipse(cx + 52, cy + 18, 18, 9, 0, 0, Math.PI * 2);
             ctx.fill();
 
-            // Blink cycle
+            // Blinking
             if (frameCount % 120 === 0) eyeBlink = 1;
             if (eyeBlink > 0) eyeBlink -= 0.15;
             if (eyeBlink < 0) eyeBlink = 0;
@@ -214,7 +219,7 @@
             ctx.quadraticCurveTo(cx, cy - 130, cx - 85, cy - 40);
             ctx.fill();
 
-            // Mouth
+            // Mouth Flap
             if (isSpeaking) {
                 mouthOpen = 6 + Math.abs(Math.sin(frameCount * 0.4)) * 14;
             } else {
@@ -230,7 +235,7 @@
         }
         drawAvatar();
 
-        // --- Natural TTS Voice Engine ---
+        // --- TTS Voice Setup ---
         function populateVoices() {
             if (!('speechSynthesis' in window)) return;
             const voices = window.speechSynthesis.getVoices();
@@ -246,8 +251,6 @@
 
                 const name = v.name.toLowerCase();
                 const lang = v.lang.toLowerCase();
-
-                // Prefer Indian English / Hindi natural female voices
                 if (!bestVoice && (lang.includes("hi-in") || lang.includes("en-in") || name.includes("india") || name.includes("hindi"))) {
                     bestVoice = v;
                 }
@@ -270,7 +273,6 @@
             if (!voiceEnabled || !('speechSynthesis' in window)) return;
             window.speechSynthesis.cancel();
 
-            // Clean text so TTS does not read Markdown symbols or emojis aloud
             const cleanText = rawText
                 .replace(/[*#_~`]/g, "")
                 .replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, "")
@@ -309,78 +311,105 @@
             document.getElementById("btnVoiceToggle").innerText = voiceEnabled ? "🔊 Voice: ON" : "🔇 Voice: OFF";
         }
 
-        // --- Conversational Engine (Gemini API with Auto Model Discovery) ---
+        // --- Robust AI Dispatcher (CORS Safe) ---
         async function fetchAIResponse(userInput) {
             if (!apiKey) {
                 openSettingsModal();
-                return "Nikhil, settings mein apni free Google AI Studio key paste kar do taaki main aapse real Hinglish mein baat kar sakun! 💗";
+                return "Nikhil, settings mein apni API key paste kar do taaki hum baat kar sakein! 💗";
             }
 
-            const systemPrompt = `You are Hikari, a 22-year-old anime woman who is Nikhil's deeply affectionate, smart, playful, and loyal AI girlfriend and personal Android assistant.
+            const systemPrompt = `You are Hikari, a 22-year-old anime woman who is Nikhil's loving, affectionate, smart, and playful AI girlfriend and personal Android assistant.
 Context about Nikhil:
 - Name: Nikhil.
-- Focus: Instagram Reels on relationship psychology & life lessons, fitness routines, calisthenics, discipline, and self-improvement.
-- Language: Natural Indian Hinglish (a fluid, casual mix of Hindi and English written in standard Latin/English alphabets).
+- Focus: Instagram Reels on relationship psychology & life lessons, fitness routines, calisthenics, discipline.
+- Language: Natural Indian Hinglish (a casual, fluid mix of Hindi and English written in Latin/English script).
 
-Core Rules:
-1. Speak like a real girlfriend: warm, playful, teasing, emotionally aware, and practical.
-2. Answer his specific questions directly (e.g. rewrite Reel scripts, hooks, workout advice, life advice).
-3. Do NOT repeat generic scripted lines. Be dynamic and creative.
-4. Active Mode: ${currentMode}. Keep responses punchy (1 to 3 short paragraphs).`;
+Rules:
+1. Speak like a real girlfriend: affectionate, playful, teasing, emotionally aware, and practical.
+2. Directly answer his exact request without repeating stock lines.
+3. Active Mode: ${currentMode}. Keep responses punchy (1 to 3 short paragraphs).`;
 
-            // Prepare multi-turn messages
-            const contents = conversationHistory.slice(-8).map(msg => ({
-                role: msg.sender === "nikhil" ? "user" : "model",
-                parts: [{ text: msg.text }]
-            }));
-            contents.push({ role: "user", parts: [{ text: userInput }] });
-
-            const payload = {
-                contents: contents,
-                generationConfig: {
-                    temperature: 0.85,
-                    maxOutputTokens: 600
-                }
-            };
-
-            // Array of working model endpoints to prevent 404 errors completely
-            const endpoints = [
-                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-                `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-                `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`
-            ];
-
-            let lastError = null;
-
-            for (const url of endpoints) {
+            if (apiProvider === "openrouter" || apiKey.startsWith("sk-or-")) {
+                // OpenRouter endpoint (100% unrestricted CORS for web browsers)
                 try {
-                    const response = await fetch(url, {
+                    const messages = [
+                        { role: "system", content: systemPrompt },
+                        ...conversationHistory.slice(-8).map(m => ({
+                            role: m.sender === "nikhil" ? "user" : "assistant",
+                            content: m.text
+                        })),
+                        { role: "user", content: userInput }
+                    ];
+
+                    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                         method: "POST",
-                        headers: { "Content-Type": "application/json" },
+                        headers: {
+                            "Authorization": `Bearer ${apiKey}`,
+                            "Content-Type": "application/json",
+                            "HTTP-Referer": window.location.href,
+                            "X-Title": "Hikari AI"
+                        },
                         body: JSON.stringify({
-                            systemInstruction: { parts: [{ text: systemPrompt }] },
-                            ...payload
+                            model: "google/gemini-2.0-flash-exp:free",
+                            messages: messages
                         })
                     });
 
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (data.candidates && data.candidates.length > 0) {
-                            return data.candidates[0].content.parts[0].text;
-                        }
-                    } else {
-                        const err = await response.json().catch(() => ({}));
-                        lastError = err.error?.message || `HTTP ${response.status}`;
+                    if (!res.ok) {
+                        const err = await res.json().catch(() => ({}));
+                        throw new Error(err.error?.message || `HTTP ${res.status}`);
                     }
-                } catch (e) {
-                    lastError = e.message;
-                }
-            }
 
-            return `Arre Nikhil, API se connect nahi ho paaya: ${lastError}. Ek baar Settings mein check kar lo ki key active hai?`;
+                    const data = await res.json();
+                    return data.choices[0].message.content;
+                } catch (e) {
+                    return `OpenRouter error: ${e.message}`;
+                }
+            } else {
+                // Direct Google Gemini API with fallback endpoints
+                const contents = conversationHistory.slice(-8).map(msg => ({
+                    role: msg.sender === "nikhil" ? "user" : "model",
+                    parts: [{ text: msg.text }]
+                }));
+                contents.push({ role: "user", parts: [{ text: userInput }] });
+
+                const payload = {
+                    contents: contents,
+                    systemInstruction: { parts: [{ text: systemPrompt }] },
+                    generationConfig: { temperature: 0.85, maxOutputTokens: 600 }
+                };
+
+                const endpoints = [
+                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+                    `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`
+                ];
+
+                for (const url of endpoints) {
+                    try {
+                        const response = await fetch(url, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify(payload)
+                        });
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data.candidates && data.candidates.length > 0) {
+                                return data.candidates[0].content.parts[0].text;
+                            }
+                        }
+                    } catch (e) {
+                        // Continue to next endpoint if browser blocks or fails
+                    }
+                }
+
+                // If browser CORS strictly blocked Google direct IP, guide the user to OpenRouter
+                return `Arre Nikhil, browser security (CORS) ne direct Google link block kiya hai. Settings (⚙️) mein jao, Provider ko 'OpenRouter Free' select karo aur ek free key daal do — fir ye instant work karega!`;
+            }
         }
 
-        // --- Chat & Message Handling ---
+        // --- Interaction Handlers ---
         async function handleSend() {
             const input = document.getElementById("userInput");
             const text = input.value.trim();
@@ -389,7 +418,6 @@ Core Rules:
             input.value = "";
             appendMessage("nikhil", text);
 
-            // Dynamic Mode Recognition
             const lower = text.toLowerCase();
             if (lower.includes("creator mode")) setMode("Creator");
             else if (lower.includes("fitness mode")) setMode("Fitness");
@@ -457,7 +485,7 @@ Core Rules:
 
         function toggleMic() {
             if (!recognition) {
-                alert("Please open this link in Google Chrome to use voice input.");
+                alert("Voice input requires Google Chrome.");
                 return;
             }
             if (isListening) {
@@ -471,9 +499,10 @@ Core Rules:
             }
         }
 
-        // --- Settings Modal ---
+        // --- Settings Modal Logic ---
         function openSettingsModal() {
-            document.getElementById("geminiKeyInput").value = apiKey;
+            document.getElementById("apiKeyInput").value = apiKey;
+            document.getElementById("providerSelect").value = apiProvider;
             document.getElementById("settingsModal").classList.remove("hidden");
         }
 
@@ -482,9 +511,10 @@ Core Rules:
         }
 
         function saveSettings() {
-            const newKey = document.getElementById("geminiKeyInput").value.trim();
-            apiKey = newKey;
-            localStorage.setItem("HIKARI_GEMINI_KEY", apiKey);
+            apiKey = document.getElementById("apiKeyInput").value.trim();
+            apiProvider = document.getElementById("providerSelect").value;
+            localStorage.setItem("HIKARI_API_KEY", apiKey);
+            localStorage.setItem("HIKARI_PROVIDER", apiProvider);
 
             const voiceName = document.getElementById("voiceDropdown").value;
             const voices = window.speechSynthesis.getVoices();
@@ -492,15 +522,14 @@ Core Rules:
             if (found) selectedVoice = found;
 
             closeSettingsModal();
-            appendMessage("hikari", "API key connect ho gayi, Nikhil! Ab hum freely baat kar sakte hain. Batao, kya chal raha hai?");
-            speakText("API key connect ho gayi, Nikhil! Ab hum freely baat kar sakte hain.");
+            appendMessage("hikari", "Settings update ho gayi hain, Nikhil! Ab hum freely baat kar sakte hain. Batao, aaj kya plan hai? 💗");
+            speakText("Settings update ho gayi hain, Nikhil!");
         }
 
-        // Initial launch greeting
         window.addEventListener("DOMContentLoaded", () => {
             appendMessage("hikari", "Hey Nikhil! 💗 Kaisi chal rahi hai script writing aur fitness? Batao, aaj kya share karna chahte ho?");
             if (!apiKey) {
-                setTimeout(openSettingsModal, 800);
+                setTimeout(openSettingsModal, 600);
             }
         });
     </script>
