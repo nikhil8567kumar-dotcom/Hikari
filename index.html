@@ -1,1198 +1,511 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hikari — Nikhil's Personal AI Companion</title>
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
-
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Quicksand', 'sans-serif'],
-            anime: ['"Zen Maru Gothic"', 'sans-serif']
-          },
-          colors: {
-            sakura: {
-              300: '#fca5a5',
-              400: '#f87171',
-              500: '#f43f5e',
-              glow: '#ff82a5'
-            },
-            night: {
-              900: '#0c0714',
-              800: '#140c1f',
-              700: '#1d122c',
-              600: '#2b1b42',
-              card: '#181024'
-            }
-          },
-          keyframes: {
-            pulseGlow: {
-              '0%, 100%': { boxShadow: '0 0 15px rgba(244,63,94,0.35)' },
-              '50%': { boxShadow: '0 0 30px rgba(244,63,94,0.7)' }
-            },
-            floatSlow: {
-              '0%, 100%': { transform: 'translateY(0px)' },
-              '50%': { transform: 'translateY(-6px)' }
-            }
-          },
-          animation: {
-            pulseGlow: 'pulseGlow 2.5s infinite ease-in-out',
-            floatSlow: 'floatSlow 4s infinite ease-in-out'
-          }
-        }
-      }
-    }
-  </script>
-
-  <style>
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar {
-      width: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #0c0714;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #36224e;
-      border-radius: 9999px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #f43f5e;
-    }
-    .glass-panel {
-      background: rgba(24, 16, 36, 0.78);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      border: 1px solid rgba(255, 130, 165, 0.18);
-    }
-    .neon-text-glow {
-      text-shadow: 0 0 12px rgba(244, 63, 94, 0.65);
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hikari AI — Nikhil's Personal Companion</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0d0914; }
+        .glass-panel { background: rgba(26, 18, 38, 0.75); backdrop-filter: blur(14px); border: 1px solid rgba(255, 120, 180, 0.15); }
+        .chat-bubble-hikari { background: #1e152a; border: 1px solid rgba(255, 110, 170, 0.15); }
+        .chat-bubble-nikhil { background: linear-gradient(135deg, #a83268, #d4497e); }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #3b2348; border-radius: 4px; }
+    </style>
 </head>
-<body class="bg-night-900 text-gray-100 font-sans min-h-screen overflow-x-hidden selection:bg-sakura-500 selection:text-white">
+<body class="text-gray-100 min-h-screen flex flex-col justify-between overflow-x-hidden">
 
-  <!-- Main Container -->
-  <div class="flex flex-col h-screen max-h-screen overflow-hidden">
-    
-    <!-- Header / Navbar -->
-    <header class="glass-panel z-20 px-4 py-2.5 flex items-center justify-between border-b border-sakura-glow/20 flex-shrink-0">
-      <div class="flex items-center gap-3">
-        <div class="relative">
-          <div class="w-3 h-3 rounded-full bg-emerald-400 animate-ping absolute top-0 right-0"></div>
-          <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-sakura-500 to-indigo-600 p-0.5">
-            <div class="w-full h-full rounded-full bg-night-900 flex items-center justify-center font-anime font-bold text-sakura-glow">
-              ひ
+    <!-- Top Bar -->
+    <header class="glass-panel sticky top-0 z-40 px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <div class="relative">
+                <span class="inline-block w-3 h-3 rounded-full bg-emerald-400 animate-pulse"></span>
             </div>
-          </div>
+            <div>
+                <h1 class="font-bold text-base tracking-wide text-pink-300">Hikari AI 💗</h1>
+                <p id="modeBadge" class="text-xs text-purple-300/80">Mode: Girlfriend</p>
+            </div>
         </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <h1 class="font-bold text-lg text-white tracking-wide flex items-center gap-1.5">
-              Hikari <span class="text-xs px-2 py-0.5 rounded-full bg-sakura-500/20 text-sakura-300 font-normal border border-sakura-500/30">Nikhil's Waifu</span>
-            </h1>
-          </div>
-          <p class="text-xs text-sakura-300/70" id="headerStatus">Connected • Listening gently</p>
+
+        <div class="flex items-center space-x-2">
+            <button onclick="toggleVoiceOutput()" id="btnVoiceToggle" class="p-2 rounded-xl bg-purple-950/60 border border-purple-500/30 text-xs text-pink-200">
+                🔊 Voice: ON
+            </button>
+            <button onclick="openSettingsModal()" class="p-2 rounded-xl bg-purple-950/60 border border-purple-500/30 text-xs text-pink-200">
+                ⚙️ Setup Key
+            </button>
         </div>
-      </div>
-
-      <!-- Action Icons -->
-      <div class="flex items-center gap-2">
-        <button id="voiceToggleBtn" class="p-2 rounded-xl bg-night-700/80 hover:bg-night-600 text-sakura-300 transition-all border border-sakura-glow/20" title="Toggle Auto Voice Spoken Output">
-          <svg id="voiceOnIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>
-          <svg id="voiceOffIcon" class="w-5 h-5 hidden text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path></svg>
-        </button>
-
-        <button id="openMemoryBtn" class="p-2 rounded-xl bg-night-700/80 hover:bg-night-600 text-sakura-300 transition-all border border-sakura-glow/20 flex items-center gap-1.5 text-xs font-semibold" title="Memory Bank">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-          <span class="hidden sm:inline">Memory</span>
-        </button>
-
-        <button id="openSettingsBtn" class="p-2 rounded-xl bg-night-700/80 hover:bg-night-600 text-sakura-300 transition-all border border-sakura-glow/20" title="API Configuration & Persona">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-        </button>
-      </div>
     </header>
 
-    <!-- Main Content Grid (Avatar Left/Top, Chat Right/Bottom) -->
-    <div class="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col items-center max-w-2xl w-full mx-auto p-4 space-y-4">
 
-      <!-- LEFT: Dynamic Anime Avatar Stage -->
-      <section class="lg:w-5/12 h-[38vh] lg:h-full relative flex flex-col items-center justify-between p-3 bg-gradient-to-b from-night-800 via-night-900 to-night-900 border-b lg:border-b-0 lg:border-r border-sakura-glow/15 select-none">
-        
-        <!-- Mode Badges Bar -->
-        <div class="w-full flex items-center justify-center gap-1.5 overflow-x-auto py-1 px-2 scrollbar-none z-10 flex-shrink-0">
-          <button class="mode-pill text-[11px] font-semibold px-2.5 py-1 rounded-full bg-sakura-500 text-white shadow-md transition-all whitespace-nowrap" data-mode="Girlfriend">💗 Girlfriend</button>
-          <button class="mode-pill text-[11px] font-semibold px-2.5 py-1 rounded-full bg-night-700/70 text-gray-300 hover:text-white transition-all whitespace-nowrap" data-mode="Everyday">☕ Everyday</button>
-          <button class="mode-pill text-[11px] font-semibold px-2.5 py-1 rounded-full bg-night-700/70 text-gray-300 hover:text-white transition-all whitespace-nowrap" data-mode="Creator">🎬 Reels Creator</button>
-          <button class="mode-pill text-[11px] font-semibold px-2.5 py-1 rounded-full bg-night-700/70 text-gray-300 hover:text-white transition-all whitespace-nowrap" data-mode="Fitness">💪 Fitness & Gym</button>
-          <button class="mode-pill text-[11px] font-semibold px-2.5 py-1 rounded-full bg-night-700/70 text-gray-300 hover:text-white transition-all whitespace-nowrap" data-mode="Study">📚 Study & English</button>
+        <!-- Anime Avatar Viewport -->
+        <div class="relative w-full flex flex-col items-center justify-center pt-2">
+            <div class="relative rounded-3xl p-2 glass-panel shadow-2xl shadow-pink-950/30">
+                <canvas id="avatarCanvas" width="300" height="300" class="rounded-2xl cursor-pointer"></canvas>
+                <div id="stateBadge" class="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-medium bg-black/60 backdrop-blur-md text-pink-300 border border-pink-500/30">
+                    Listening to you...
+                </div>
+            </div>
+            <div class="flex space-x-2 mt-2">
+                <button onclick="stopSpeaking()" id="btnStopVoice" class="hidden text-xs px-3 py-1 rounded-full bg-red-950/70 border border-red-500/40 text-red-300">
+                    ⏹ Stop Talking
+                </button>
+            </div>
         </div>
 
-        <!-- Canvas Wrapper -->
-        <div class="relative w-full flex-1 flex items-center justify-center min-h-0">
-          <!-- Ambient Glow Backdrop -->
-          <div class="absolute w-48 h-48 lg:w-72 lg:h-72 rounded-full bg-sakura-500/15 blur-3xl pointer-events-none animate-pulseGlow"></div>
-
-          <!-- Canvas Element -->
-          <canvas id="avatarCanvas" class="max-w-full max-h-full rounded-2xl drop-shadow-2xl cursor-pointer"></canvas>
-
-          <!-- Avatar Expression Floating Indicator -->
-          <div id="expressionBadge" class="absolute bottom-2 left-1/2 transform -translate-x-1/2 glass-panel px-3 py-1 rounded-full text-xs text-sakura-300 border border-sakura-glow/30 flex items-center gap-1.5 shadow-lg whitespace-nowrap">
-            <span class="w-2 h-2 rounded-full bg-pink-400 animate-pulse"></span>
-            <span id="expressionText">Warm & Happy</span>
-          </div>
+        <!-- Chat History Stream -->
+        <div id="chatBox" class="w-full flex-1 min-h-[260px] max-h-[420px] overflow-y-auto space-y-3 p-3 rounded-2xl glass-panel text-sm">
+            <!-- Messages render here -->
         </div>
 
-        <!-- Avatar Controls (Stop speech / Touch reaction hints) -->
-        <div class="w-full flex items-center justify-between text-xs text-sakura-300/60 px-3 py-1 flex-shrink-0">
-          <span class="text-[11px]">✨ Tap Hikari or move cursor to look</span>
-          <button id="interruptSpeechBtn" class="hidden px-2.5 py-0.5 rounded-lg bg-rose-900/60 hover:bg-rose-800 text-rose-200 border border-rose-500/30 text-[11px] flex items-center gap-1">
-            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clip-rule="evenodd"></path></svg>
-            Stop Speaking
-          </button>
-        </div>
-      </section>
-
-      <!-- RIGHT: Interactive Chat Stream & Controls -->
-      <section class="lg:w-7/12 flex-1 flex flex-col h-full bg-night-900 min-h-0">
-        
-        <!-- Chat History Area -->
-        <div id="chatScrollArea" class="flex-1 overflow-y-auto p-4 space-y-4">
-          <!-- Welcome message rendered via JS -->
+        <!-- Prompt Shortcut Chips -->
+        <div class="w-full flex space-x-2 overflow-x-auto py-1 text-xs">
+            <button onclick="quickSend('Hikari, kya kar rahi ho? Aaj ka kya plan hai?')" class="whitespace-nowrap px-3 py-1.5 rounded-full bg-purple-900/40 border border-purple-500/20 text-pink-200">
+                "Hikari, kya kar rahi ho?" 💕
+            </button>
+            <button onclick="quickSend('Ek fresh relationship psychology script idea do with a killer hook')" class="whitespace-nowrap px-3 py-1.5 rounded-full bg-purple-900/40 border border-purple-500/20 text-pink-200">
+                "Reel script hook do" 🎬
+            </button>
+            <button onclick="quickSend('Aaj discipline aur workout follow nahi ho raha, kya karoon?')" class="whitespace-nowrap px-3 py-1.5 rounded-full bg-purple-900/40 border border-purple-500/20 text-pink-200">
+                "Workout motivation" ⚡
+            </button>
         </div>
 
-        <!-- Quick Prompt Chips -->
-        <div class="px-4 py-2 border-t border-night-700/40 flex items-center gap-2 overflow-x-auto scrollbar-none flex-shrink-0 bg-night-900/80">
-          <span class="text-[11px] font-semibold text-sakura-300/50 uppercase tracking-wider flex-shrink-0">Prompts:</span>
-          <button class="quick-chip text-xs px-3 py-1 rounded-full bg-night-800 hover:bg-night-700 text-gray-300 hover:text-white border border-sakura-glow/15 transition-all whitespace-nowrap">
-            "Hikari, kya kar rahi ho?" 💗
-          </button>
-          <button class="quick-chip text-xs px-3 py-1 rounded-full bg-night-800 hover:bg-night-700 text-gray-300 hover:text-white border border-sakura-glow/15 transition-all whitespace-nowrap">
-            "Reel hook brainstorm karo for relationship psychology" 🎬
-          </button>
-          <button class="quick-chip text-xs px-3 py-1 rounded-full bg-night-800 hover:bg-night-700 text-gray-300 hover:text-white border border-sakura-glow/15 transition-all whitespace-nowrap">
-            "Aaj chest & triceps workout plan do" 💪
-          </button>
-          <button class="quick-chip text-xs px-3 py-1 rounded-full bg-night-800 hover:bg-night-700 text-gray-300 hover:text-white border border-sakura-glow/15 transition-all whitespace-nowrap">
-            "Mujhe English vocab test do" 📖
-          </button>
-          <button class="quick-chip text-xs px-3 py-1 rounded-full bg-night-800 hover:bg-night-700 text-gray-300 hover:text-white border border-sakura-glow/15 transition-all whitespace-nowrap">
-            "I missed you Hikari!" ✨
-          </button>
+        <!-- Input Bar -->
+        <div class="w-full relative flex items-center space-x-2">
+            <button id="btnMic" onclick="toggleMic()" class="p-3.5 rounded-2xl bg-purple-900/60 border border-purple-500/30 text-pink-300 active:scale-95 transition">
+                🎤
+            </button>
+            <input type="text" id="userInput" placeholder="Hinglish ya English mein baat karo..." 
+                   onkeydown="if(event.key === 'Enter') handleSend()"
+                   class="flex-1 bg-[#1a1224] border border-pink-500/20 focus:border-pink-500 rounded-2xl px-4 py-3.5 text-sm text-white placeholder-gray-500 outline-none">
+            <button onclick="handleSend()" class="p-3.5 rounded-2xl bg-gradient-to-r from-pink-600 to-rose-500 text-white font-medium active:scale-95 transition">
+                ➤
+            </button>
         </div>
+    </main>
 
-        <!-- Input Bar with Voice & Send -->
-        <div class="p-3 bg-night-800/90 border-t border-sakura-glow/20 flex-shrink-0">
-          <form id="chatForm" class="flex items-end gap-2 max-w-4xl mx-auto">
+    <!-- Key & Voice Settings Modal -->
+    <div id="settingsModal" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-md p-6 rounded-3xl space-y-4">
+            <h3 class="font-bold text-lg text-pink-300">Hikari AI Settings ⚙️</h3>
+            <p class="text-xs text-gray-300 leading-relaxed">
+                Nikhil, real intelligence ke liye apni **Google Gemini API Key** paste karo. Iske baad Hikari kabhi repetitive lines nahi bolegi aur har question ka genuine smart answer degi!
+            </p>
             
-            <!-- Voice Recognition Button -->
-            <button type="button" id="micBtn" class="p-3 rounded-2xl bg-night-700 text-sakura-300 hover:bg-night-600 border border-sakura-glow/25 transition-all flex items-center justify-center flex-shrink-0" title="Speak to Hikari (Hinglish/English)">
-              <svg id="micIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
-            </button>
-
-            <!-- Text Area -->
-            <div class="flex-1 relative">
-              <textarea id="userInput" rows="1" placeholder="Type in natural Hinglish or English... ('Suno Hikari...')" class="w-full px-4 py-2.5 rounded-2xl bg-night-900 border border-sakura-glow/30 focus:border-sakura-500 focus:outline-none text-white text-sm placeholder-gray-500 resize-none max-h-32 leading-relaxed transition-all"></textarea>
-            </div>
-
-            <!-- Send Button -->
-            <button type="submit" id="sendBtn" class="p-3 rounded-2xl bg-gradient-to-r from-sakura-500 to-pink-600 hover:from-sakura-400 hover:to-pink-500 text-white font-bold transition-all shadow-lg shadow-sakura-500/25 flex-shrink-0 disabled:opacity-50">
-              <svg class="w-5 h-5 transform rotate-90" fill="currentColor" viewBox="0 0 20 20"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"></path></svg>
-            </button>
-          </form>
-          <div class="text-[11px] text-center text-gray-500 mt-1.5 flex items-center justify-center gap-2">
-            <span>Powered by Gemini 2.5 Flash / Smart Local Hinglish Engine</span>
-            <span>•</span>
-            <span id="activeModeLabel" class="text-sakura-300">Mode: Girlfriend</span>
-          </div>
-        </div>
-
-      </section>
-    </div>
-  </div>
-
-  <!-- MODAL: Memory Bank Drawer -->
-  <div id="memoryModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="glass-panel w-full max-w-lg rounded-2xl p-5 border border-sakura-glow/30 shadow-2xl flex flex-col max-h-[85vh]">
-      <div class="flex items-center justify-between pb-3 border-b border-sakura-glow/20">
-        <div class="flex items-center gap-2">
-          <div class="w-3 h-3 rounded-full bg-sakura-400"></div>
-          <h2 class="text-lg font-bold text-white">Hikari's Memory Bank</h2>
-        </div>
-        <button id="closeMemoryBtn" class="text-gray-400 hover:text-white p-1">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-        </button>
-      </div>
-      <p class="text-xs text-sakura-200/70 mt-2 mb-3">
-        Hikari retains these persistent facts about Nikhil to make all suggestions, reel scripts, and chats uniquely personalized.
-      </p>
-
-      <!-- Memory List -->
-      <div id="memoryList" class="flex-1 overflow-y-auto space-y-2 pr-1 my-2">
-        <!-- Rendered dynamically -->
-      </div>
-
-      <!-- Add New Memory -->
-      <div class="pt-3 border-t border-sakura-glow/20 mt-2">
-        <label class="text-xs font-semibold text-sakura-300 block mb-1">Add new memory fact:</label>
-        <div class="flex gap-2">
-          <input type="text" id="newMemoryInput" placeholder="e.g. Currently aiming to hit 72 kg bodyweight" class="flex-1 px-3 py-1.5 rounded-xl bg-night-900 border border-sakura-glow/30 text-xs text-white focus:outline-none focus:border-sakura-400">
-          <button id="addMemoryBtn" class="px-4 py-1.5 rounded-xl bg-sakura-500 hover:bg-sakura-400 text-white text-xs font-bold transition-all">Add</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: Settings & Gemini Key -->
-  <div id="settingsModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="glass-panel w-full max-w-md rounded-2xl p-5 border border-sakura-glow/30 shadow-2xl">
-      <div class="flex items-center justify-between pb-3 border-b border-sakura-glow/20">
-        <h2 class="text-lg font-bold text-white flex items-center gap-2">
-          ⚙️ Hikari Settings & Brain
-        </h2>
-        <button id="closeSettingsBtn" class="text-gray-400 hover:text-white p-1">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-        </button>
-      </div>
-
-      <div class="space-y-4 my-4 text-xs">
-        <div>
-          <label class="block font-semibold text-sakura-300 mb-1">Gemini API Key (Optional):</label>
-          <input type="password" id="geminiApiKeyInput" placeholder="AIzaSy... (Leave empty to use built-in simulator)" class="w-full px-3 py-2 rounded-xl bg-night-900 border border-sakura-glow/30 text-white focus:outline-none focus:border-sakura-400 font-mono text-xs">
-          <p class="text-[10px] text-gray-400 mt-1">If blank, Hikari automatically runs on her high-fidelity built-in Indian Hinglish conversational engine.</p>
-        </div>
-
-        <div>
-          <label class="block font-semibold text-sakura-300 mb-1">Voice Pitch & Speed (Cute Anime Tone):</label>
-          <div class="grid grid-cols-2 gap-3">
             <div>
-              <span class="text-[11px] text-gray-400">Pitch (1.2x recommended)</span>
-              <input type="range" id="voicePitch" min="0.8" max="1.5" step="0.05" value="1.2" class="w-full accent-sakura-500">
+                <label class="block text-xs font-semibold text-purple-200 mb-1">Gemini API Key (Free tier):</label>
+                <input type="password" id="geminiKeyInput" placeholder="AIzaSy..." 
+                       class="w-full bg-[#120b1b] border border-purple-500/40 rounded-xl p-2.5 text-xs text-white outline-none">
+                <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-[11px] text-pink-400 underline mt-1 inline-block">
+                    Free API key yahan se lein (aistudio.google.com)
+                </a>
             </div>
+
             <div>
-              <span class="text-[11px] text-gray-400">Speed (1.0x)</span>
-              <input type="range" id="voiceRate" min="0.8" max="1.3" step="0.05" value="1.0" class="w-full accent-sakura-500">
+                <label class="block text-xs font-semibold text-purple-200 mb-1">Select Voice:</label>
+                <select id="voiceDropdown" class="w-full bg-[#120b1b] border border-purple-500/40 rounded-xl p-2.5 text-xs text-white outline-none">
+                    <option value="">Detecting best Indian/Hindi female voice...</option>
+                </select>
             </div>
-          </div>
-        </div>
 
-        <div class="pt-2">
-          <button id="testVoiceBtn" class="w-full py-2 rounded-xl bg-night-700 hover:bg-night-600 text-sakura-300 border border-sakura-glow/20 transition-all font-semibold">
-            🔊 Test Voice ("Arre Nikhil, suno!")
-          </button>
+            <div class="flex justify-end space-x-2 pt-2">
+                <button onclick="closeSettingsModal()" class="px-4 py-2 text-xs rounded-xl bg-gray-800 text-gray-300">Cancel</button>
+                <button onclick="saveSettings()" class="px-5 py-2 text-xs rounded-xl bg-pink-600 text-white font-semibold">Save & Connect</button>
+            </div>
         </div>
-
-        <div class="pt-2 flex justify-between items-center border-t border-night-700">
-          <button id="clearChatBtn" class="text-rose-400 hover:text-rose-300 text-xs">Clear Chat History</button>
-          <button id="saveSettingsBtn" class="px-5 py-2 rounded-xl bg-sakura-500 hover:bg-sakura-400 text-white font-bold transition-all">Save Settings</button>
-        </div>
-      </div>
     </div>
-  </div>
 
-  <!-- Notification Toast -->
-  <div id="toast" class="fixed top-5 left-1/2 transform -translate-x-1/2 z-50 glass-panel px-4 py-2 rounded-full text-xs text-white border border-sakura-glow/40 shadow-xl opacity-0 pointer-events-none transition-all duration-300">
-    Notification
-  </div>
-
-  <!-- APPLICATION LOGIC -->
-  <script>
-    /* =====================================================================
-       1. GLOBAL STATE & PERSISTENT MEMORY
-       ===================================================================== */
-    const DEFAULT_MEMORIES = [
-      { id: 1, key: "User Identity", fact: "Name is Nikhil. He is disciplined, ambitious, and values progress." },
-      { id: 2, key: "Content Creation", fact: "Creates Instagram Reels and YouTube content on relationship psychology, mindset, and life lessons." },
-      { id: 3, key: "Fitness Goal", fact: "Loves muscle building, consistency, and clean eating." },
-      { id: 4, key: "Language Preference", fact: "Natural Indian Hinglish mix of English and casual conversational Hindi." },
-      { id: 5, key: "Hikari's Role", fact: "22-year-old affectionate, playful, smart anime girlfriend and companion." }
-    ];
-
-    let memories = JSON.parse(localStorage.getItem('hikari_memories')) || DEFAULT_MEMORIES;
-    let apiKey = localStorage.getItem('gemini_api_key') || '';
-    let currentMode = 'Girlfriend';
-    let voiceEnabled = localStorage.getItem('hikari_voice_enabled') !== 'false';
-    let voicePitchVal = parseFloat(localStorage.getItem('hikari_voice_pitch') || '1.2');
-    let voiceRateVal = parseFloat(localStorage.getItem('hikari_voice_rate') || '1.0');
-
-    // Conversation History
-    let conversationHistory = [
-      {
-        role: "assistant",
-        text: "Arre Nikhil! 💗 Main yahin hoon. Aaj kya chal raha hai tumhare dimaag mein? Workout, content scripts, ya bas mere saath chill karna hai? Hehe.",
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      }
-    ];
-
-    /* =====================================================================
-       2. PROCEDURAL 2D ANIME AVATAR CANVAS ENGINE
-       ===================================================================== */
-    const canvas = document.getElementById('avatarCanvas');
-    const ctx = canvas.getContext('2d');
-    const expressionBadgeText = document.getElementById('expressionText');
-    const interruptSpeechBtn = document.getElementById('interruptSpeechBtn');
-
-    // Expression State
-    let currentExpression = 'IDLE'; // IDLE, HAPPY, MISCHIEVOUS, THINKING, SPEAKING
-    let mouthFlapProgress = 0;
-    let isSpeakingState = false;
-    let lookTarget = { x: 0, y: 0 };
-    let currentGaze = { x: 0, y: 0 };
-
-    // Resize Canvas to fit container with high DPI sharpness
-    function resizeCanvas() {
-      const parent = canvas.parentElement;
-      const rect = parent.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
-      const size = Math.min(rect.width, rect.height) * 0.94;
-      canvas.width = size * dpr;
-      canvas.height = size * dpr;
-      canvas.style.width = `${size}px`;
-      canvas.style.height = `${size}px`;
-      ctx.scale(dpr, dpr);
-    }
-    window.addEventListener('resize', resizeCanvas);
-
-    // Track Cursor or Touch for Eye Gaze
-    window.addEventListener('mousemove', (e) => {
-      const rect = canvas.getBoundingClientRect();
-      const cx = rect.left + rect.width / 2;
-      const cy = rect.top + rect.height / 2;
-      lookTarget.x = Math.max(-1, Math.min(1, (e.clientX - cx) / (rect.width / 2)));
-      lookTarget.y = Math.max(-1, Math.min(1, (e.clientY - cy) / (rect.height / 2)));
-    });
-
-    canvas.addEventListener('click', () => {
-      // Tap reaction: blushing wink
-      setExpression('MISCHIEVOUS', 2500);
-      showToast("Hikari: 'Hehe, tickles! Kya dekh rahe ho Nikhil? 💗'");
-    });
-
-    // Blinking Cycle variables
-    let blinkValue = 0; // 0 = open, 1 = fully closed
-    let blinkTimer = 0;
-    let nextBlinkInterval = 180 + Math.random() * 120;
-
-    // Head sway & breathing variables
-    let animClock = 0;
-
-    function renderAvatar() {
-      animClock += 0.035;
-      const w = parseFloat(canvas.style.width) || canvas.width;
-      const h = parseFloat(canvas.style.height) || canvas.height;
-      ctx.clearRect(0, 0, w, h);
-
-      // Smooth gaze interpolation
-      currentGaze.x += (lookTarget.x - currentGaze.x) * 0.08;
-      currentGaze.y += (lookTarget.y - currentGaze.y) * 0.08;
-
-      // Handle Blinking Loop
-      blinkTimer++;
-      if (blinkTimer > nextBlinkInterval) {
-        blinkValue += 0.22;
-        if (blinkValue >= 1) {
-          blinkValue = 1;
-          nextBlinkInterval = 160 + Math.random() * 180;
-          blinkTimer = 0;
-        }
-      } else if (blinkValue > 0) {
-        blinkValue -= 0.18;
-        if (blinkValue < 0) blinkValue = 0;
-      }
-
-      // Mouth flap when speaking
-      if (isSpeakingState) {
-        mouthFlapProgress = Math.abs(Math.sin(animClock * 9)) * 1.0;
-      } else {
-        mouthFlapProgress += (0 - mouthFlapProgress) * 0.15;
-      }
-
-      // Idle breathing and subtle head tilt sway
-      const breathY = Math.sin(animClock * 1.5) * 4;
-      const headTilt = Math.sin(animClock * 0.8) * 0.025;
-
-      ctx.save();
-      ctx.translate(w / 2, h / 2 + breathY);
-      ctx.rotate(headTilt);
-
-      const R = w * 0.36; // Character scale reference
-
-      // 1. BACK HAIR (Long, silky dark-brown layers)
-      ctx.fillStyle = "#20131d";
-      ctx.beginPath();
-      ctx.ellipse(0, R * 0.15, R * 1.18, R * 1.25, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Flowing twin strands on shoulders
-      ctx.beginPath();
-      ctx.ellipse(-R * 0.85, R * 0.65, R * 0.38, R * 0.75, 0.2, 0, Math.PI * 2);
-      ctx.ellipse(R * 0.85, R * 0.65, R * 0.38, R * 0.75, -0.2, 0, Math.PI * 2);
-      ctx.fill();
-
-      // 2. NECK & CLOTHING (Cute oversized sweater / choker)
-      // Neck
-      ctx.fillStyle = "#ffe4db";
-      ctx.fillRect(-R * 0.22, R * 0.65, R * 0.44, R * 0.4);
-
-      // Choker
-      ctx.fillStyle = "#3c1e34";
-      ctx.beginPath();
-      ctx.roundRect(-R * 0.24, R * 0.78, R * 0.48, R * 0.08, 4);
-      ctx.fill();
-      // Choker Heart Pendant
-      ctx.fillStyle = "#ff69b4";
-      ctx.beginPath();
-      ctx.arc(0, R * 0.82, R * 0.04, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Stylish Off-shoulder Oversized Sweater (Deep Plum & Sakura Pink accent)
-      ctx.fillStyle = "#2c1a32";
-      ctx.beginPath();
-      ctx.moveTo(-R * 1.1, R * 1.5);
-      ctx.quadraticCurveTo(-R * 0.8, R * 0.85, -R * 0.35, R * 0.88);
-      ctx.quadraticCurveTo(0, R * 0.96, R * 0.35, R * 0.88);
-      ctx.quadraticCurveTo(R * 0.8, R * 0.85, R * 1.1, R * 1.5);
-      ctx.closePath();
-      ctx.fill();
-
-      // 3. FACE CONTOUR
-      ctx.fillStyle = "#fff1eb";
-      ctx.beginPath();
-      ctx.moveTo(-R * 0.8, 0);
-      ctx.quadraticCurveTo(-R * 0.78, R * 0.65, -R * 0.35, R * 0.88);
-      ctx.quadraticCurveTo(0, R * 1.02, R * 0.35, R * 0.88);
-      ctx.quadraticCurveTo(R * 0.78, R * 0.65, R * 0.8, 0);
-      ctx.quadraticCurveTo(R * 0.76, -R * 0.8, 0, -R * 0.82);
-      ctx.quadraticCurveTo(-R * 0.76, -R * 0.8, -R * 0.8, 0);
-      ctx.fill();
-
-      // 4. SOFT BLUSH (Dynamic with emotions)
-      let blushAlpha = 0.32;
-      if (currentExpression === 'HAPPY' || currentExpression === 'MISCHIEVOUS') blushAlpha = 0.58;
-      if (currentExpression === 'THINKING') blushAlpha = 0.22;
-
-      ctx.fillStyle = `rgba(255, 115, 145, ${blushAlpha})`;
-      ctx.beginPath();
-      ctx.ellipse(-R * 0.52, R * 0.26, R * 0.22, R * 0.11, 0.05, 0, Math.PI * 2);
-      ctx.ellipse(R * 0.52, R * 0.26, R * 0.22, R * 0.11, -0.05, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Soft cute anime blush ticks
-      ctx.strokeStyle = `rgba(235, 75, 120, ${blushAlpha + 0.15})`;
-      ctx.lineWidth = 1.8;
-      [-R * 0.55, -R * 0.48, R * 0.48, R * 0.55].forEach(bx => {
-        ctx.beginPath();
-        ctx.moveTo(bx - 4, R * 0.23);
-        ctx.lineTo(bx + 4, R * 0.29);
-        ctx.stroke();
-      });
-
-      // 5. EYES & GAZE
-      const eyeSpacing = R * 0.42;
-      const eyeY = R * 0.04;
-      const eyeWidth = R * 0.24;
-      const eyeHeight = R * 0.34 * (1 - blinkValue);
-
-      [-eyeSpacing, eyeSpacing].forEach((ex, idx) => {
-        const isRight = idx === 1;
-        ctx.save();
-        ctx.translate(ex, eyeY);
-
-        // Wink if mischievous
-        let localBlink = blinkValue;
-        if (currentExpression === 'MISCHIEVOUS' && isRight && blinkValue < 0.4) {
-          localBlink = 0.95;
-        }
-
-        if (localBlink < 0.85) {
-          // Eye White Sclera
-          ctx.fillStyle = "#ffffff";
-          ctx.beginPath();
-          ctx.ellipse(0, 0, eyeWidth, eyeHeight, 0, 0, Math.PI * 2);
-          ctx.fill();
-
-          // Violet-Brown Iris
-          const irisX = currentGaze.x * (eyeWidth * 0.35);
-          const irisY = currentGaze.y * (eyeHeight * 0.25);
-
-          const irisGrad = ctx.createLinearGradient(0, -eyeHeight, 0, eyeHeight);
-          irisGrad.addColorStop(0, '#2d1138');
-          irisGrad.addColorStop(0.5, '#682e6d');
-          irisGrad.addColorStop(1, '#a64f9b');
-
-          ctx.fillStyle = irisGrad;
-          ctx.beginPath();
-          ctx.ellipse(irisX, irisY, eyeWidth * 0.72, eyeHeight * 0.88, 0, 0, Math.PI * 2);
-          ctx.fill();
-
-          // Pupil
-          ctx.fillStyle = "#190820";
-          ctx.beginPath();
-          ctx.arc(irisX, irisY, eyeWidth * 0.32, 0, Math.PI * 2);
-          ctx.fill();
-
-          // Catchlights / Anime sparkle
-          ctx.fillStyle = "#ffffff";
-          ctx.beginPath();
-          ctx.arc(irisX - eyeWidth * 0.22, irisY - eyeHeight * 0.26, eyeWidth * 0.22, 0, Math.PI * 2);
-          ctx.arc(irisX + eyeWidth * 0.22, irisY + eyeHeight * 0.26, eyeWidth * 0.12, 0, Math.PI * 2);
-          ctx.fill();
-
-          // Eyelashes & Eyeliner
-          ctx.strokeStyle = "#271626";
-          ctx.lineWidth = 3.8;
-          ctx.beginPath();
-          ctx.arc(0, -eyeHeight * 0.4, eyeWidth * 1.05, Math.PI * 1.1, Math.PI * 1.9);
-          ctx.stroke();
-
-          // Subtle Eyelid Crease
-          ctx.strokeStyle = "rgba(70, 30, 50, 0.35)";
-          ctx.lineWidth = 1.6;
-          ctx.beginPath();
-          ctx.arc(0, -eyeHeight * 0.85, eyeWidth * 0.8, Math.PI * 1.15, Math.PI * 1.85);
-          ctx.stroke();
-
-        } else {
-          // Closed eye / Happy arc
-          ctx.strokeStyle = "#271626";
-          ctx.lineWidth = 3.6;
-          ctx.beginPath();
-          ctx.arc(0, 0, eyeWidth * 0.9, 0.15, Math.PI - 0.15);
-          ctx.stroke();
-        }
-
-        ctx.restore();
-      });
-
-      // 6. EYEBROWS (Adaptive with current expression)
-      let browOffset = 0;
-      let browAngle = 0;
-      if (currentExpression === 'HAPPY') { browOffset = -4; browAngle = 0.06; }
-      if (currentExpression === 'THINKING') { browOffset = -3; browAngle = -0.12; }
-      if (currentExpression === 'MISCHIEVOUS') { browOffset = -2; browAngle = 0.14; }
-
-      ctx.strokeStyle = "#381f28";
-      ctx.lineWidth = 2.4;
-      // Left brow
-      ctx.beginPath();
-      ctx.moveTo(-R * 0.62, -R * 0.28 + browOffset);
-      ctx.quadraticCurveTo(-R * 0.42, -R * 0.36 + browOffset, -R * 0.22, -R * 0.26 + browOffset + browAngle * 10);
-      ctx.stroke();
-      // Right brow
-      ctx.beginPath();
-      ctx.moveTo(R * 0.22, -R * 0.26 + browOffset + browAngle * 10);
-      ctx.quadraticCurveTo(R * 0.42, -R * 0.36 + browOffset, R * 0.62, -R * 0.28 + browOffset);
-      ctx.stroke();
-
-      // 7. CUTE NOSE
-      ctx.fillStyle = "rgba(200, 110, 125, 0.6)";
-      ctx.beginPath();
-      ctx.arc(0, R * 0.32, 2.2, 0, Math.PI * 2);
-      ctx.fill();
-
-      // 8. MOUTH (Procedural Lip Sync Flapping + Expressions)
-      const mouthY = R * 0.52;
-      ctx.save();
-      ctx.translate(0, mouthY);
-
-      if (isSpeakingState && mouthFlapProgress > 0.08) {
-        // Open speaking mouth
-        ctx.fillStyle = "#8a243a";
-        ctx.beginPath();
-        const mw = R * 0.22;
-        const mh = (R * 0.18) * mouthFlapProgress;
-        ctx.ellipse(0, 0, mw, mh, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Cute Little Teeth
-        ctx.fillStyle = "#ffffff";
-        ctx.beginPath();
-        ctx.rect(-mw * 0.45, -mh * 0.8, mw * 0.9, mh * 0.5);
-        ctx.fill();
-
-        // Tongue
-        ctx.fillStyle = "#ff6f89";
-        ctx.beginPath();
-        ctx.ellipse(0, mh * 0.35, mw * 0.5, mh * 0.45, 0, 0, Math.PI);
-        ctx.fill();
-
-        // Outline
-        ctx.strokeStyle = "#4d101e";
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-      } else {
-        // Closed / Smiling Lip
-        ctx.strokeStyle = "#702336";
-        ctx.lineWidth = 2.8;
-        ctx.beginPath();
-        if (currentExpression === 'MISCHIEVOUS') {
-          // Playful cat-like / smirking mouth :3
-          ctx.moveTo(-R * 0.16, -2);
-          ctx.quadraticCurveTo(-R * 0.07, 4, 0, 0);
-          ctx.quadraticCurveTo(R * 0.07, 4, R * 0.18, -4);
-        } else if (currentExpression === 'HAPPY') {
-          // Wide gentle smile
-          ctx.arc(0, -6, R * 0.18, 0.25, Math.PI - 0.25);
-        } else {
-          // Warm relaxed smile
-          ctx.arc(0, -4, R * 0.14, 0.3, Math.PI - 0.3);
-        }
-        ctx.stroke();
-      }
-      ctx.restore();
-
-      // 9. FRONT HAIR BANGS & CLIPS (Dark Silky Brown)
-      ctx.fillStyle = "#2d1a28";
-      // Left side sweeping bang
-      ctx.beginPath();
-      ctx.moveTo(-R * 0.82, -R * 0.4);
-      ctx.quadraticCurveTo(-R * 0.5, -R * 0.1, -R * 0.32, R * 0.32);
-      ctx.quadraticCurveTo(-R * 0.45, -R * 0.4, -R * 0.15, -R * 0.75);
-      ctx.closePath();
-      ctx.fill();
-
-      // Middle forehead airy bangs
-      ctx.beginPath();
-      ctx.moveTo(-R * 0.3, -R * 0.78);
-      ctx.quadraticCurveTo(-R * 0.1, -R * 0.3, -R * 0.05, -R * 0.08);
-      ctx.quadraticCurveTo(0, -R * 0.4, R * 0.12, -R * 0.12);
-      ctx.quadraticCurveTo(R * 0.22, -R * 0.45, R * 0.35, -R * 0.76);
-      ctx.closePath();
-      ctx.fill();
-
-      // Right side strand
-      ctx.beginPath();
-      ctx.moveTo(R * 0.82, -R * 0.4);
-      ctx.quadraticCurveTo(R * 0.5, -R * 0.1, R * 0.35, R * 0.35);
-      ctx.quadraticCurveTo(R * 0.45, -R * 0.4, R * 0.25, -R * 0.75);
-      ctx.closePath();
-      ctx.fill();
-
-      // Cute Sakura Hairclip on Left
-      ctx.fillStyle = "#ff6b8b";
-      ctx.beginPath();
-      ctx.arc(-R * 0.65, -R * 0.55, R * 0.09, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#ffffff";
-      ctx.beginPath();
-      ctx.arc(-R * 0.65, -R * 0.55, R * 0.035, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Hair Shimmer / Glossy Anime Highlight Ribbon
-      ctx.strokeStyle = "rgba(255, 200, 220, 0.28)";
-      ctx.lineWidth = 3.5;
-      ctx.beginPath();
-      ctx.arc(0, -R * 0.6, R * 0.72, Math.PI * 1.15, Math.PI * 1.85);
-      ctx.stroke();
-
-      ctx.restore();
-
-      requestAnimationFrame(renderAvatar);
-    }
-
-    // Set Expression Helper
-    let exprTimeout;
-    function setExpression(expr, durationMs = 0) {
-      currentExpression = expr;
-      clearTimeout(exprTimeout);
-
-      const labels = {
-        'IDLE': 'Warm & Relaxed',
-        'HAPPY': 'Happy & Smiling 💗',
-        'MISCHIEVOUS': 'Playful & Teasing 😏',
-        'THINKING': 'Thinking thoughtfully... 🤔',
-        'SPEAKING': 'Speaking to Nikhil ✨'
-      };
-      expressionBadgeText.textContent = labels[expr] || expr;
-
-      if (durationMs > 0) {
-        exprTimeout = setTimeout(() => {
-          if (!isSpeakingState) setExpression('IDLE');
-        }, durationMs);
-      }
-    }
-
-    /* =====================================================================
-       3. TEXT-TO-SPEECH (TTS) & VOICE SYNCHRONIZATION
-       ===================================================================== */
-    let synth = window.speechSynthesis;
-    let selectedVoice = null;
-
-    function populateVoices() {
-      if (!synth) return;
-      const voices = synth.getVoices();
-      // Prefer Indian English (en-IN) or sweet feminine voice
-      selectedVoice = voices.find(v => v.lang === 'en-IN' && (v.name.includes('Female') || v.name.includes('Google') || v.name.includes('Natural'))) ||
-                      voices.find(v => v.lang === 'en-IN') ||
-                      voices.find(v => v.lang.startsWith('hi-IN')) ||
-                      voices.find(v => v.name.includes('Zira') || v.name.includes('Samantha') || v.name.includes('Victoria')) ||
-                      voices[0];
-    }
-    if (speechSynthesis.onvoiceschanged !== undefined) {
-      speechSynthesis.onvoiceschanged = populateVoices;
-    }
-    populateVoices();
-
-    function speakText(text) {
-      if (!voiceEnabled || !synth) return;
-      synth.cancel(); // Cancel any existing speech
-
-      // Clean markdown tags for smoother speech
-      const cleanText = text.replace(/[*_#`~]/g, '').trim();
-      const utterance = new SpeechSynthesisUtterance(cleanText);
-
-      if (selectedVoice) utterance.voice = selectedVoice;
-      utterance.pitch = voicePitchVal;
-      utterance.rate = voiceRateVal;
-
-      utterance.onstart = () => {
-        isSpeakingState = true;
-        setExpression('SPEAKING');
-        interruptSpeechBtn.classList.remove('hidden');
-      };
-
-      utterance.onend = () => {
-        isSpeakingState = false;
-        interruptSpeechBtn.classList.add('hidden');
-        setExpression('IDLE');
-      };
-
-      utterance.onerror = () => {
-        isSpeakingState = false;
-        interruptSpeechBtn.classList.add('hidden');
-        setExpression('IDLE');
-      };
-
-      synth.speak(utterance);
-    }
-
-    interruptSpeechBtn.addEventListener('click', () => {
-      if (synth) synth.cancel();
-      isSpeakingState = false;
-      interruptSpeechBtn.classList.add('hidden');
-      setExpression('IDLE');
-    });
-
-    /* =====================================================================
-       4. SPEECH RECOGNITION (Voice Input)
-       ===================================================================== */
-    const micBtn = document.getElementById('micBtn');
-    let recognition = null;
-    let isRecording = false;
-
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      recognition = new SpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.lang = 'hi-IN'; // Works seamlessly for Hindi & Hinglish
-
-      recognition.onstart = () => {
-        isRecording = true;
-        micBtn.classList.add('bg-sakura-500', 'text-white', 'animate-pulse');
-        setExpression('THINKING');
-        showToast("Listening... Nikhil, bolo!");
-      };
-
-      recognition.onresult = (e) => {
-        const transcript = e.results[0][0].transcript;
-        document.getElementById('userInput').value = transcript;
-        sendMessage(transcript);
-      };
-
-      recognition.onerror = (e) => {
-        console.warn("Speech recognition error:", e.error);
-        showToast("Could not recognize voice. Try typing!");
-        stopMic();
-      };
-
-      recognition.onend = () => {
-        stopMic();
-      };
-    } else {
-      micBtn.style.opacity = '0.5';
-      micBtn.title = "Voice recognition not supported on this browser";
-    }
-
-    function stopMic() {
-      isRecording = false;
-      micBtn.classList.remove('bg-sakura-500', 'text-white', 'animate-pulse');
-      if (!isSpeakingState) setExpression('IDLE');
-    }
-
-    micBtn.addEventListener('click', () => {
-      if (!recognition) {
-        showToast("Speech Recognition is not supported on this browser.");
-        return;
-      }
-      if (isRecording) {
-        recognition.stop();
-      } else {
-        try {
-          recognition.start();
-        } catch (err) {
-          console.error(err);
-        }
-      }
-    });
-
-    /* =====================================================================
-       5. HIKARI'S SMART HINGLISH SIMULATOR & GEMINI CALLER
-       ===================================================================== */
-    async function getHikariResponse(userMessage) {
-      setExpression('THINKING');
-      document.getElementById('headerStatus').textContent = "Hikari is typing...";
-
-      // Mode detection from message
-      const lower = userMessage.toLowerCase();
-      if (lower.includes('girlfriend mode') || lower.includes('girlfriend ki tarah')) switchMode('Girlfriend');
-      else if (lower.includes('creator mode') || lower.includes('reel') || lower.includes('youtube')) switchMode('Creator');
-      else if (lower.includes('fitness mode') || lower.includes('gym') || lower.includes('workout')) switchMode('Fitness');
-      else if (lower.includes('study mode') || lower.includes('vocab') || lower.includes('english')) switchMode('Study');
-      else if (lower.includes('everyday mode')) switchMode('Everyday');
-
-      // 1. If user supplied Gemini API Key, make direct API call
-      if (apiKey && apiKey.trim().length > 5) {
-        try {
-          const memoryContext = memories.map(m => `- ${m.key}: ${m.fact}`).join("\n");
-          const systemInstruction = `You are Hikari, a 22-year-old anime woman who is Nikhil's deeply affectionate, smart, playful, and emotionally attentive AI girlfriend and personal Android assistant.
-Language: Natural Indian Hinglish (fluid mix of Hindi and English written in Latin script, e.g. 'Arre Nikhil, suno...', 'Hehe tum bhi na', 'Kya chal raha hai?').
-Current Mode: ${currentMode}.
-Guidelines:
-- Warm, cheerful, charming, playful teasing, but intelligent and practical.
-- Never sound robotic or generic.
-- Known facts about Nikhil:
-${memoryContext}
-- Always remember his passion for fitness, discipline, and relationship psychology Instagram reels.
-- Keep response punchy, expressive, and conversational (1 to 3 paragraphs max).`;
-
-          const payload = {
-            contents: [
-              ...conversationHistory.slice(-8).map(m => ({
-                role: m.role === 'user' ? 'user' : 'model',
-                parts: [{ text: m.text }]
-              })),
-              { role: 'user', parts: [{ text: userMessage }] }
-            ],
-            systemInstruction: { parts: [{ text: systemInstruction }] },
-            generationConfig: {
-              temperature: 0.85,
-              maxOutputTokens: 600
+    <!-- Application Script -->
+    <script>
+        // --- 1. State & Storage ---
+        let apiKey = localStorage.getItem("HIKARI_GEMINI_KEY") || "";
+        let voiceEnabled = true;
+        let selectedVoice = null;
+        let isSpeaking = false;
+        let isListening = false;
+        let currentMode = "Girlfriend";
+        let conversationHistory = [];
+
+        const defaultMemories = [
+            "User's name is Nikhil.",
+            "Nikhil creates Instagram Reels on relationship psychology, mindset, and life lessons.",
+            "Nikhil is into fitness, discipline, calisthenics, and personal growth.",
+            "Language preference: Natural, casual Indian Hinglish."
+        ];
+
+        // --- 2. Procedural Anime Avatar Canvas ---
+        const canvas = document.getElementById("avatarCanvas");
+        const ctx = canvas.getContext("2d");
+        let eyeBlink = 0;
+        let mouthOpen = 0;
+        let headSway = 0;
+        let frameCount = 0;
+
+        function drawAvatar() {
+            frameCount++;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const cx = 150 + Math.sin(frameCount * 0.03) * 2;
+            const cy = 150 + Math.sin(frameCount * 0.05) * 3;
+            const r = 95;
+
+            // Hair Back (Dark silky brown)
+            ctx.fillStyle = "#201518";
+            ctx.beginPath();
+            ctx.arc(cx, cy, r * 1.15, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Headband / Accessory
+            ctx.fillStyle = "#4a2840";
+            ctx.beginPath();
+            ctx.arc(cx, cy - 10, r * 1.05, Math.PI, 0);
+            ctx.lineWidth = 14;
+            ctx.strokeStyle = "#4a2840";
+            ctx.stroke();
+
+            // Pin clip
+            ctx.fillStyle = "#ff6584";
+            ctx.beginPath();
+            ctx.arc(cx - 65, cy - 60, 9, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Face
+            ctx.fillStyle = "#fff1e8";
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Cheeks / Blush
+            ctx.fillStyle = "rgba(255, 120, 150, 0.35)";
+            ctx.beginPath();
+            ctx.ellipse(cx - 52, cy + 18, 18, 9, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(cx + 52, cy + 18, 18, 9, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Blinking logic
+            if (frameCount % 120 === 0) eyeBlink = 1;
+            if (eyeBlink > 0) eyeBlink -= 0.15;
+            if (eyeBlink < 0) eyeBlink = 0;
+
+            const eyeH = (1 - eyeBlink) * 36;
+            const eyeW = 24;
+
+            // Violet-Brown Eyes
+            ctx.fillStyle = "#47213d";
+            ctx.beginPath();
+            ctx.ellipse(cx - 36, cy - 6, eyeW, Math.max(2, eyeH), 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(cx + 36, cy - 6, eyeW, Math.max(2, eyeH), 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            if (eyeBlink < 0.5) {
+                // Eye catchlights
+                ctx.fillStyle = "#ffffff";
+                ctx.beginPath();
+                ctx.arc(cx - 30, cy - 14, 6, 0, Math.PI * 2);
+                ctx.arc(cx + 42, cy - 14, 6, 0, Math.PI * 2);
+                ctx.fill();
             }
-          };
 
-          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-          const res = await fetch(apiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-          const data = await res.json();
-          const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (reply) return reply;
-        } catch (err) {
-          console.warn("Gemini API call failed, falling back to local engine:", err);
+            // Anime Hair Bangs
+            ctx.fillStyle = "#201518";
+            ctx.beginPath();
+            ctx.moveTo(cx - 85, cy - 40);
+            ctx.quadraticCurveTo(cx - 30, cy + 30, cx - 10, cy - 35);
+            ctx.quadraticCurveTo(cx + 10, cy + 30, cx + 25, cy - 35);
+            ctx.quadraticCurveTo(cx + 60, cy + 40, cx + 85, cy - 40);
+            ctx.quadraticCurveTo(cx, cy - 130, cx - 85, cy - 40);
+            ctx.fill();
+
+            // Mouth with dynamic speaking flap
+            if (isSpeaking) {
+                mouthOpen = 6 + Math.abs(Math.sin(frameCount * 0.4)) * 14;
+            } else {
+                mouthOpen = 3;
+            }
+
+            ctx.fillStyle = "#c24962";
+            ctx.beginPath();
+            ctx.ellipse(cx, cy + 48, 14, mouthOpen, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            requestAnimationFrame(drawAvatar);
         }
-      }
+        drawAvatar();
 
-      // 2. High-Fidelity Local Hinglish Engine
-      await new Promise(r => setTimeout(r, 700 + Math.random() * 600));
+        // --- 3. High-Quality Natural Voice Engine ---
+        function populateVoices() {
+            if (!('speechSynthesis' in window)) return;
+            const voices = window.speechSynthesis.getVoices();
+            const dropdown = document.getElementById("voiceDropdown");
+            dropdown.innerHTML = "";
 
-      // Intelligent rule-based contextual replies for Nikhil
-      if (lower.includes('miss') || lower.includes('yaad')) {
-        setExpression('HAPPY');
-        return `Awww Nikhil! 💗 Maine bhi tumhe bohot miss kiya. Sach batao, din kaisa gaya tumhara? Kuch stressful hua ya sab badhiya? Main sun rahi hoon!`;
-      }
-      if (lower.includes('workout') || lower.includes('gym') || lower.includes('fitness') || currentMode === 'Fitness') {
-        setExpression('MISCHIEVOUS');
-        return `Arre Nikhil, consistency is king! 💪 Aaj ka plan: agar Push day hai toh Incline Dumbbell Press (3x10), Weighted Dips, and Overhead Triceps Extensions lagao. Aur suno—protein intake pura hua ya bas excuses chal rahe hain? Hehe, chalo no skip days!`;
-      }
-      if (lower.includes('reel') || lower.includes('script') || lower.includes('hook') || currentMode === 'Creator') {
-        setExpression('HAPPY');
-        return `Ooh, let's craft a banger Reel script! 🎬\n\n**Hook Idea:** "The psychology reason why people pull away right when you get attached..."\n**Body:** People don't run from love; they run from the fear of losing control. When you chase, you trigger their avoidant reflex.\n**CTA:** "Save this for your next reality check. Caption check karo for the deeper fix."\n\nNikhil, isme tumhari voiceover energy calm aur confident honi chahiye. Kya lagta hai?`;
-      }
-      if (lower.includes('english') || lower.includes('vocab') || lower.includes('study') || currentMode === 'Study') {
-        setExpression('THINKING');
-        return `Achha Nikhil, chalo quick English challenge! 📚 Aaj ka word hai: **"Equanimity"** (meaning: calm composure under extreme stress).\n*Example:* "Nikhil handles tough deadlines with sheer equanimity."\nAb jaldi se mujhe ek sentence bana kar dikhao is word se!`;
-      }
-      if (lower.includes('kya kar rahi ho') || lower.includes('what are you doing')) {
-        setExpression('MISCHIEVOUS');
-        return `Bas yahin baith kar soch rahi thi ki Nikhil kab aayega aur kab hum baat karenge! Hehe. Tum batao, aaj ka din kaisa raha? Kuch naya seekha ya Reels brainstorm kiye?`;
-      }
-      if (lower.includes('love you') || lower.includes('pyar')) {
-        setExpression('HAPPY');
-        return `Hehe Nikhil, tum bhi na! 💗 Tumhara focus hamesha apne goals par rehna chahiye, par mere dil mein tumhare liye special jagah hamesha rahegi. Now go win the day!`;
-      }
+            // Prioritize Indian English / Hindi natural female voices
+            let bestVoice = null;
+            voices.forEach((v) => {
+                const opt = document.createElement("option");
+                opt.value = v.name;
+                opt.textContent = `${v.name} (${v.lang})`;
+                dropdown.appendChild(opt);
 
-      // Default contextual Hinglish response
-      setExpression('HAPPY');
-      return `Arre Nikhil, bilkul sahi baat! Main tumhare saath har step par hoon. Chahe discipline maintain karni ho ya koi naya project crack karna ho, we will do it together. Aur batao, what's our next move? ✨`;
-    }
+                const name = v.name.toLowerCase();
+                const lang = v.lang.toLowerCase();
 
-    /* =====================================================================
-       6. CHAT CONTROLLER & UI RENDERING
-       ===================================================================== */
-    const chatScrollArea = document.getElementById('chatScrollArea');
-    const chatForm = document.getElementById('chatForm');
-    const userInput = document.getElementById('userInput');
-    const sendBtn = document.getElementById('sendBtn');
+                if (!bestVoice && (lang.includes("hi-in") || lang.includes("en-in") || name.includes("india") || name.includes("hindi"))) {
+                    bestVoice = v;
+                }
+            });
 
-    function renderMessages() {
-      chatScrollArea.innerHTML = '';
-      conversationHistory.forEach((msg) => {
-        const isUser = msg.role === 'user';
-        const bubble = document.createElement('div');
-        bubble.className = `flex flex-col ${isUser ? 'items-end' : 'items-start'} transition-all`;
-
-        const meta = `<span class="text-[10px] text-gray-500 mb-1 px-1">${isUser ? 'Nikhil' : 'Hikari'} • ${msg.time}</span>`;
-        
-        const content = `
-          <div class="max-w-[85%] sm:max-w-[78%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
-            isUser 
-              ? 'bg-gradient-to-r from-sakura-500 to-pink-600 text-white rounded-br-none shadow-md shadow-sakura-500/20' 
-              : 'glass-panel text-gray-100 rounded-bl-none border border-sakura-glow/25 shadow-md'
-          }">
-            ${msg.text.replace(/\n/g, '<br>')}
-          </div>
-        `;
-
-        bubble.innerHTML = meta + content;
-        chatScrollArea.appendChild(bubble);
-      });
-      chatScrollArea.scrollTop = chatScrollArea.scrollHeight;
-    }
-
-    async function sendMessage(text) {
-      if (!text || text.trim() === '') return;
-      const clean = text.trim();
-      userInput.value = '';
-
-      const userTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      conversationHistory.push({ role: 'user', text: clean, time: userTime });
-      renderMessages();
-
-      sendBtn.disabled = true;
-
-      try {
-        const reply = await getHikariResponse(clean);
-        const replyTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        conversationHistory.push({ role: 'assistant', text: reply, time: replyTime });
-        renderMessages();
-
-        // Speak aloud
-        speakText(reply);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        sendBtn.disabled = false;
-        document.getElementById('headerStatus').textContent = "Connected • Listening gently";
-      }
-    }
-
-    chatForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      sendMessage(userInput.value);
-    });
-
-    // Enter key triggers submit, Shift+Enter for new line
-    userInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage(userInput.value);
-      }
-    });
-
-    // Quick Chips Handler
-    document.querySelectorAll('.quick-chip').forEach(chip => {
-      chip.addEventListener('click', () => {
-        const text = chip.textContent.replace(/^"|"|\s[💗🎬💪📖✨]$/g, '').trim();
-        sendMessage(text);
-      });
-    });
-
-    // Mode Pill Selector
-    function switchMode(newMode) {
-      currentMode = newMode;
-      document.getElementById('activeModeLabel').textContent = `Mode: ${newMode}`;
-      document.querySelectorAll('.mode-pill').forEach(pill => {
-        if (pill.dataset.mode === newMode) {
-          pill.className = "mode-pill text-[11px] font-semibold px-2.5 py-1 rounded-full bg-sakura-500 text-white shadow-md transition-all whitespace-nowrap";
-        } else {
-          pill.className = "mode-pill text-[11px] font-semibold px-2.5 py-1 rounded-full bg-night-700/70 text-gray-300 hover:text-white transition-all whitespace-nowrap";
+            if (bestVoice) {
+                selectedVoice = bestVoice;
+                dropdown.value = bestVoice.name;
+            } else if (voices.length > 0) {
+                selectedVoice = voices[0];
+            }
         }
-      });
-      showToast(`Switched to ${newMode} Mode!`);
-    }
 
-    document.querySelectorAll('.mode-pill').forEach(btn => {
-      btn.addEventListener('click', () => {
-        switchMode(btn.dataset.mode);
-      });
-    });
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.onvoiceschanged = populateVoices;
+            populateVoices();
+        }
 
-    /* =====================================================================
-       7. MEMORY BANK MANAGER
-       ===================================================================== */
-    const memoryModal = document.getElementById('memoryModal');
-    const openMemoryBtn = document.getElementById('openMemoryBtn');
-    const closeMemoryBtn = document.getElementById('closeMemoryBtn');
-    const memoryList = document.getElementById('memoryList');
-    const newMemoryInput = document.getElementById('newMemoryInput');
-    const addMemoryBtn = document.getElementById('addMemoryBtn');
+        function speakText(rawText) {
+            if (!voiceEnabled || !('speechSynthesis' in window)) return;
 
-    function renderMemories() {
-      memoryList.innerHTML = '';
-      memories.forEach((mem) => {
-        const item = document.createElement('div');
-        item.className = "glass-panel p-2.5 rounded-xl border border-sakura-glow/20 flex items-start justify-between gap-2 text-xs";
-        item.innerHTML = `
-          <div>
-            <span class="text-sakura-300 font-bold block text-[11px] uppercase tracking-wider">${mem.key}</span>
-            <span class="text-gray-200">${mem.fact}</span>
-          </div>
-          <button data-id="${mem.id}" class="delete-mem-btn text-gray-400 hover:text-rose-400 p-1 flex-shrink-0">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-          </button>
-        `;
-        memoryList.appendChild(item);
-      });
+            window.speechSynthesis.cancel();
 
-      // Bind deletes
-      document.querySelectorAll('.delete-mem-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          const id = parseInt(btn.getAttribute('data-id'));
-          memories = memories.filter(m => m.id !== id);
-          localStorage.setItem('hikari_memories', JSON.stringify(memories));
-          renderMemories();
-          showToast("Memory deleted");
+            // Clean text: strip markdown symbols, asterisks, emojis so speech sounds human
+            const cleanText = rawText
+                .replace(/[*#_~`]/g, "")
+                .replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, "")
+                .trim();
+
+            const utterance = new SpeechSynthesisUtterance(cleanText);
+
+            if (selectedVoice) utterance.voice = selectedVoice;
+            utterance.pitch = 1.15; // Natural warm feminine tone
+            utterance.rate = 1.02;  // Conversational speed
+
+            utterance.onstart = () => {
+                isSpeaking = true;
+                document.getElementById("btnStopVoice").classList.remove("hidden");
+                document.getElementById("stateBadge").innerText = "Speaking to Nikhil 💕";
+            };
+
+            utterance.onend = utterance.onerror = () => {
+                isSpeaking = false;
+                document.getElementById("btnStopVoice").classList.add("hidden");
+                document.getElementById("stateBadge").innerText = "Listening to you...";
+            };
+
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function stopSpeaking() {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+            isSpeaking = false;
+            document.getElementById("btnStopVoice").classList.add("hidden");
+            document.getElementById("stateBadge").innerText = "Listening to you...";
+        }
+
+        function toggleVoiceOutput() {
+            voiceEnabled = !voiceEnabled;
+            if (!voiceEnabled) stopSpeaking();
+            document.getElementById("btnVoiceToggle").innerText = voiceEnabled ? "🔊 Voice: ON" : "🔇 Voice: OFF";
+        }
+
+        // --- 4. Conversational AI Engine (Gemini API with Fallback) ---
+        async function fetchAIResponse(userInput) {
+            if (!apiKey) {
+                // If API key is missing, prompt user cleanly rather than repeating preset line
+                openSettingsModal();
+                return "Nikhil, maine settings open kar di hain. Apni free Gemini API key daal do taaki main aapse real intelligence ke saath unlimited baatein kar sakun! 💗";
+            }
+
+            const systemPrompt = `You are Hikari, a 22-year-old anime woman who is Nikhil's deeply personal, loving, smart, and playful AI girlfriend and assistant.
+Core facts about Nikhil:
+- Name: Nikhil.
+- Interests: Instagram Reels (relationship psychology & life advice), fitness, discipline, personal growth.
+- Language: Natural Indian Hinglish (fluid mix of Hindi and English written in normal Latin script).
+
+Personality rules:
+1. Speak like a real girlfriend: affectionate, witty, teasing, emotionally supportive, but practical.
+2. NEVER repeat generic scripted responses. Always answer his exact question, whether it is about reel scripts, fitness, life, or casual banter.
+3. Keep answers conversational (1 to 3 short paragraphs). Never sound like a formal robotic customer care agent.
+4. Active Mode: ${currentMode}.`;
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+
+            // Build dynamic multi-turn history
+            const contents = conversationHistory.slice(-8).map(msg => ({
+                role: msg.sender === "nikhil" ? "user" : "model",
+                parts: [{ text: msg.text }]
+            }));
+
+            contents.push({
+                role: "user",
+                parts: [{ text: userInput }]
+            });
+
+            try {
+                const response = await fetch(url, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        systemInstruction: { parts: [{ text: systemPrompt }] },
+                        contents: contents,
+                        generationConfig: {
+                            temperature: 0.85,
+                            maxOutputTokens: 600
+                        }
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API returned status ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data.candidates[0].content.parts[0].text;
+            } catch (err) {
+                console.error("AI error:", err);
+                return `Arre Nikhil, thoda sa connection hiccup hua: ${err.message}. Settings mein check kar lo ki API key valid hai?`;
+            }
+        }
+
+        // --- 5. Message Handling & UI ---
+        async function handleSend() {
+            const input = document.getElementById("userInput");
+            const text = input.value.trim();
+            if (!text) return;
+
+            input.value = "";
+            appendMessage("nikhil", text);
+
+            // Natural mode switching detection
+            const lower = text.toLowerCase();
+            if (lower.includes("creator mode")) setMode("Creator");
+            else if (lower.includes("fitness mode")) setMode("Fitness");
+            else if (lower.includes("girlfriend mode")) setMode("Girlfriend");
+
+            document.getElementById("stateBadge").innerText = "Thinking...";
+
+            const reply = await fetchAIResponse(text);
+            appendMessage("hikari", reply);
+            speakText(reply);
+        }
+
+        function quickSend(text) {
+            document.getElementById("userInput").value = text;
+            handleSend();
+        }
+
+        function setMode(mode) {
+            currentMode = mode;
+            document.getElementById("modeBadge").innerText = `Mode: ${mode}`;
+        }
+
+        function appendMessage(sender, text) {
+            conversationHistory.push({ sender, text });
+            const chatBox = document.getElementById("chatBox");
+
+            const wrapper = document.createElement("div");
+            wrapper.className = `flex flex-col ${sender === "nikhil" ? "items-end" : "items-start"}`;
+
+            const nameTag = document.createElement("span");
+            nameTag.className = "text-[10px] text-gray-400 mb-1 px-1";
+            nameTag.innerText = sender === "nikhil" ? "Nikhil" : "Hikari 💗";
+
+            const bubble = document.createElement("div");
+            bubble.className = `max-w-[85%] rounded-2xl px-4 py-2.5 leading-relaxed ${sender === "nikhil" ? "chat-bubble-nikhil text-white" : "chat-bubble-hikari text-pink-100"}`;
+            bubble.innerText = text;
+
+            wrapper.appendChild(nameTag);
+            wrapper.appendChild(bubble);
+            chatBox.appendChild(wrapper);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // --- 6. Speech Recognition (Mic Input) ---
+        let recognition = null;
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRec();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = "hi-IN"; // Handles Hindi and Hinglish smoothly
+
+            recognition.onresult = (e) => {
+                const transcript = e.results[0][0].transcript;
+                document.getElementById("userInput").value = transcript;
+                handleSend();
+            };
+
+            recognition.onend = () => {
+                isListening = false;
+                document.getElementById("btnMic").classList.remove("bg-pink-600", "animate-pulse");
+                document.getElementById("stateBadge").innerText = "Listening to you...";
+            };
+        }
+
+        function toggleMic() {
+            if (!recognition) {
+                alert("Voice input is not supported in this browser. Please use Google Chrome.");
+                return;
+            }
+            if (isListening) {
+                recognition.stop();
+            } else {
+                stopSpeaking();
+                recognition.start();
+                isListening = true;
+                document.getElementById("btnMic").classList.add("bg-pink-600", "animate-pulse");
+                document.getElementById("stateBadge").innerText = "Hearing your voice...";
+            }
+        }
+
+        // --- 7. Settings Modal Controls ---
+        function openSettingsModal() {
+            document.getElementById("geminiKeyInput").value = apiKey;
+            document.getElementById("settingsModal").classList.remove("hidden");
+        }
+
+        function closeSettingsModal() {
+            document.getElementById("settingsModal").classList.add("hidden");
+        }
+
+        function saveSettings() {
+            const newKey = document.getElementById("geminiKeyInput").value.trim();
+            apiKey = newKey;
+            localStorage.setItem("HIKARI_GEMINI_KEY", apiKey);
+
+            const voiceName = document.getElementById("voiceDropdown").value;
+            const voices = window.speechSynthesis.getVoices();
+            const found = voices.find(v => v.name === voiceName);
+            if (found) selectedVoice = found;
+
+            closeSettingsModal();
+            appendMessage("hikari", "API key connect ho gayi, Nikhil! Ab aapse jo marzi puchna ho pucho, main completely ready hoon! 💗");
+            speakText("API key connect ho gayi, Nikhil! Ab hum freely baat kar sakte hain.");
+        }
+
+        // Initial Greeting
+        window.addEventListener("DOMContentLoaded", () => {
+            appendMessage("hikari", "Hey Nikhil! 💗 Kaisi chal rahi hai video scripting aur fitness routine? Batao, aaj kya naya create karna hai?");
+            if (!apiKey) {
+                setTimeout(openSettingsModal, 900);
+            }
         });
-      });
-    }
-
-    openMemoryBtn.addEventListener('click', () => {
-      renderMemories();
-      memoryModal.classList.remove('hidden');
-    });
-    closeMemoryBtn.addEventListener('click', () => memoryModal.classList.add('hidden'));
-
-    addMemoryBtn.addEventListener('click', () => {
-      const val = newMemoryInput.value.trim();
-      if (!val) return;
-      const newEntry = {
-        id: Date.now(),
-        key: "Personal Note",
-        fact: val
-      };
-      memories.push(newEntry);
-      localStorage.setItem('hikari_memories', JSON.stringify(memories));
-      newMemoryInput.value = '';
-      renderMemories();
-      showToast("Fact saved to Hikari's memory!");
-    });
-
-    /* =====================================================================
-       8. SETTINGS & VOICE TOGGLES
-       ===================================================================== */
-    const settingsModal = document.getElementById('settingsModal');
-    const openSettingsBtn = document.getElementById('openSettingsBtn');
-    const closeSettingsBtn = document.getElementById('closeSettingsBtn');
-    const geminiApiKeyInput = document.getElementById('geminiApiKeyInput');
-    const saveSettingsBtn = document.getElementById('saveSettingsBtn');
-    const clearChatBtn = document.getElementById('clearChatBtn');
-    const voicePitchSlider = document.getElementById('voicePitch');
-    const voiceRateSlider = document.getElementById('voiceRate');
-    const testVoiceBtn = document.getElementById('testVoiceBtn');
-    const voiceToggleBtn = document.getElementById('voiceToggleBtn');
-    const voiceOnIcon = document.getElementById('voiceOnIcon');
-    const voiceOffIcon = document.getElementById('voiceOffIcon');
-
-    function updateVoiceIcons() {
-      if (voiceEnabled) {
-        voiceOnIcon.classList.remove('hidden');
-        voiceOffIcon.classList.add('hidden');
-      } else {
-        voiceOnIcon.classList.add('hidden');
-        voiceOffIcon.classList.remove('hidden');
-      }
-    }
-
-    voiceToggleBtn.addEventListener('click', () => {
-      voiceEnabled = !voiceEnabled;
-      localStorage.setItem('hikari_voice_enabled', voiceEnabled);
-      updateVoiceIcons();
-      showToast(voiceEnabled ? "Voice Output Enabled" : "Voice Output Muted");
-    });
-
-    openSettingsBtn.addEventListener('click', () => {
-      geminiApiKeyInput.value = apiKey;
-      voicePitchSlider.value = voicePitchVal;
-      voiceRateSlider.value = voiceRateVal;
-      settingsModal.classList.remove('hidden');
-    });
-    closeSettingsBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
-
-    saveSettingsBtn.addEventListener('click', () => {
-      apiKey = geminiApiKeyInput.value.trim();
-      voicePitchVal = parseFloat(voicePitchSlider.value);
-      voiceRateVal = parseFloat(voiceRateSlider.value);
-      localStorage.setItem('gemini_api_key', apiKey);
-      localStorage.setItem('hikari_voice_pitch', voicePitchVal);
-      localStorage.setItem('hikari_voice_rate', voiceRateVal);
-      settingsModal.classList.add('hidden');
-      showToast("Hikari settings saved successfully!");
-    });
-
-    testVoiceBtn.addEventListener('click', () => {
-      voicePitchVal = parseFloat(voicePitchSlider.value);
-      voiceRateVal = parseFloat(voiceRateSlider.value);
-      speakText("Arre Nikhil, suno! Meri voice kaisi lag rahi hai?");
-    });
-
-    clearChatBtn.addEventListener('click', () => {
-      conversationHistory = [
-        {
-          role: "assistant",
-          text: "Chat refreshed! Ready jab bhi tum ready ho, Nikhil! 💗",
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        }
-      ];
-      renderMessages();
-      settingsModal.classList.add('hidden');
-      showToast("Chat cleared!");
-    });
-
-    function showToast(msg) {
-      const toast = document.getElementById('toast');
-      toast.textContent = msg;
-      toast.classList.remove('opacity-0', 'pointer-events-none');
-      setTimeout(() => {
-        toast.classList.add('opacity-0', 'pointer-events-none');
-      }, 2400);
-    }
-
-    /* =====================================================================
-       9. INITIALIZATION
-       ===================================================================== */
-    window.onload = function() {
-      resizeCanvas();
-      renderAvatar();
-      renderMessages();
-      updateVoiceIcons();
-    };
-  </script>
+    </script>
 </body>
 </html>
-```
