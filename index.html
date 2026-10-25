@@ -6,6 +6,16 @@
     <title>Hikari AI — Nikhil's Companion</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Official Google GenAI Browser Bundle -->
+    <script type="importmap">
+      {
+        "imports": {
+          "@google/genai": "https://esm.run/@google/genai"
+        }
+      }
+    </script>
+
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0d0914; }
         .glass-panel { background: rgba(26, 18, 38, 0.88); backdrop-filter: blur(14px); border: 1px solid rgba(255, 120, 180, 0.15); }
@@ -68,7 +78,7 @@
             <button onclick="quickSend('Ek fresh relationship psychology Reel script idea do with a killer hook')" class="whitespace-nowrap px-3 py-1.5 rounded-full bg-purple-900/40 border border-purple-500/20 text-pink-200">
                 "Reel script hook do" 🎬
             </button>
-            <button onclick="quickSend('Aaj discipline follow karne mein laziness aa rahi hai, practical solution do')" class="whitespace-nowrap px-3 py-1.5 rounded-full bg-purple-900/40 border border-purple-500/20 text-pink-200">
+            <button onclick="quickSend('Aaj discipline follow karne mein thodi laziness aa rahi hai, practical solution do')" class="whitespace-nowrap px-3 py-1.5 rounded-full bg-purple-900/40 border border-purple-500/20 text-pink-200">
                 "Discipline fix" ⚡
             </button>
         </div>
@@ -93,20 +103,12 @@
             <h3 class="font-bold text-lg text-pink-300">Hikari AI Settings ⚙️</h3>
             
             <div>
-                <label class="block text-xs font-semibold text-purple-200 mb-1">Provider Type:</label>
-                <select id="providerSelect" class="w-full bg-[#120b1b] border border-purple-500/40 rounded-xl p-2.5 text-xs text-white outline-none">
-                    <option value="gemini">Google Gemini API (AI Studio Key)</option>
-                    <option value="openrouter">OpenRouter Free (Free Gemini 2.0 / Llama)</option>
-                </select>
-            </div>
-
-            <div>
-                <label class="block text-xs font-semibold text-purple-200 mb-1">API Key:</label>
-                <input type="password" id="apiKeyInput" placeholder="Paste your API key here..." 
+                <label class="block text-xs font-semibold text-purple-200 mb-1">Your Gemini API Key (starts with AIzaSy...):</label>
+                <input type="password" id="apiKeyInput" placeholder="Paste your Gemini key..." 
                        class="w-full bg-[#120b1b] border border-purple-500/40 rounded-xl p-2.5 text-xs text-white outline-none">
-                <p class="text-[11px] text-gray-400 mt-1">
-                    Gemini Key: starts with <code>AIzaSy...</code> | OpenRouter Key: starts with <code>sk-or-v1...</code>
-                </p>
+                <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-[11px] text-pink-400 underline mt-1 inline-block">
+                    Get free Gemini key from Google AI Studio
+                </a>
             </div>
 
             <div>
@@ -123,10 +125,21 @@
         </div>
     </div>
 
-    <!-- Application Script -->
-    <script>
-        let apiKey = localStorage.getItem("HIKARI_API_KEY") || "";
-        let apiProvider = localStorage.getItem("HIKARI_PROVIDER") || "gemini";
+    <!-- Application Script (ES Module) -->
+    <script type="module">
+        import { GoogleGenAI } from "@google/genai";
+
+        // Global Bindings for inline HTML event handlers
+        window.toggleVoiceOutput = toggleVoiceOutput;
+        window.openSettingsModal = openSettingsModal;
+        window.closeSettingsModal = closeSettingsModal;
+        window.saveSettings = saveSettings;
+        window.stopSpeaking = stopSpeaking;
+        window.toggleMic = toggleMic;
+        window.quickSend = quickSend;
+        window.handleSend = handleSend;
+
+        let apiKey = localStorage.getItem("HIKARI_GEMINI_KEY") || "";
         let voiceEnabled = true;
         let selectedVoice = null;
         let isSpeaking = false;
@@ -311,101 +324,48 @@
             document.getElementById("btnVoiceToggle").innerText = voiceEnabled ? "🔊 Voice: ON" : "🔇 Voice: OFF";
         }
 
-        // --- Robust AI Dispatcher (CORS Safe) ---
+        // --- Official Google GenAI SDK Caller ---
         async function fetchAIResponse(userInput) {
             if (!apiKey) {
                 openSettingsModal();
-                return "Nikhil, settings mein apni API key paste kar do taaki hum baat kar sakein! 💗";
+                return "Nikhil, settings mein apni Gemini API key paste kar do taaki hum baat kar sakein! 💗";
             }
 
             const systemPrompt = `You are Hikari, a 22-year-old anime woman who is Nikhil's loving, affectionate, smart, and playful AI girlfriend and personal Android assistant.
 Context about Nikhil:
 - Name: Nikhil.
 - Focus: Instagram Reels on relationship psychology & life lessons, fitness routines, calisthenics, discipline.
-- Language: Natural Indian Hinglish (a casual, fluid mix of Hindi and English written in Latin/English script).
+- Language: Natural Indian Hinglish (a casual, fluid mix of Hindi and English written in normal Latin/English script).
 
 Rules:
 1. Speak like a real girlfriend: affectionate, playful, teasing, emotionally aware, and practical.
-2. Directly answer his exact request without repeating stock lines.
+2. Directly answer his exact question without repeating stock lines.
 3. Active Mode: ${currentMode}. Keep responses punchy (1 to 3 short paragraphs).`;
 
-            if (apiProvider === "openrouter" || apiKey.startsWith("sk-or-")) {
-                // OpenRouter endpoint (100% unrestricted CORS for web browsers)
-                try {
-                    const messages = [
-                        { role: "system", content: systemPrompt },
-                        ...conversationHistory.slice(-8).map(m => ({
-                            role: m.sender === "nikhil" ? "user" : "assistant",
-                            content: m.text
-                        })),
-                        { role: "user", content: userInput }
-                    ];
+            try {
+                // Initialize the official Google Gen AI SDK directly inside the browser
+                const ai = new GoogleGenAI({ apiKey: apiKey });
 
-                    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-                        method: "POST",
-                        headers: {
-                            "Authorization": `Bearer ${apiKey}`,
-                            "Content-Type": "application/json",
-                            "HTTP-Referer": window.location.href,
-                            "X-Title": "Hikari AI"
-                        },
-                        body: JSON.stringify({
-                            model: "google/gemini-2.0-flash-exp:free",
-                            messages: messages
-                        })
-                    });
-
-                    if (!res.ok) {
-                        const err = await res.json().catch(() => ({}));
-                        throw new Error(err.error?.message || `HTTP ${res.status}`);
-                    }
-
-                    const data = await res.json();
-                    return data.choices[0].message.content;
-                } catch (e) {
-                    return `OpenRouter error: ${e.message}`;
-                }
-            } else {
-                // Direct Google Gemini API with fallback endpoints
+                // Multi-turn history structure
                 const contents = conversationHistory.slice(-8).map(msg => ({
                     role: msg.sender === "nikhil" ? "user" : "model",
                     parts: [{ text: msg.text }]
                 }));
                 contents.push({ role: "user", parts: [{ text: userInput }] });
 
-                const payload = {
+                const response = await ai.models.generateContent({
+                    model: 'gemini-2.5-flash',
                     contents: contents,
-                    systemInstruction: { parts: [{ text: systemPrompt }] },
-                    generationConfig: { temperature: 0.85, maxOutputTokens: 600 }
-                };
-
-                const endpoints = [
-                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-                    `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`
-                ];
-
-                for (const url of endpoints) {
-                    try {
-                        const response = await fetch(url, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify(payload)
-                        });
-
-                        if (response.ok) {
-                            const data = await response.json();
-                            if (data.candidates && data.candidates.length > 0) {
-                                return data.candidates[0].content.parts[0].text;
-                            }
-                        }
-                    } catch (e) {
-                        // Continue to next endpoint if browser blocks or fails
+                    config: {
+                        systemInstruction: systemPrompt,
+                        temperature: 0.85
                     }
-                }
+                });
 
-                // If browser CORS strictly blocked Google direct IP, guide the user to OpenRouter
-                return `Arre Nikhil, browser security (CORS) ne direct Google link block kiya hai. Settings (⚙️) mein jao, Provider ko 'OpenRouter Free' select karo aur ek free key daal do — fir ye instant work karega!`;
+                return response.text;
+            } catch (err) {
+                console.error("GenAI SDK error:", err);
+                return `Arre Nikhil, thoda issue hua: ${err.message || err}. Ek baar settings mein check kar lo ki key active hai?`;
             }
         }
 
@@ -502,7 +462,6 @@ Rules:
         // --- Settings Modal Logic ---
         function openSettingsModal() {
             document.getElementById("apiKeyInput").value = apiKey;
-            document.getElementById("providerSelect").value = apiProvider;
             document.getElementById("settingsModal").classList.remove("hidden");
         }
 
@@ -512,9 +471,7 @@ Rules:
 
         function saveSettings() {
             apiKey = document.getElementById("apiKeyInput").value.trim();
-            apiProvider = document.getElementById("providerSelect").value;
-            localStorage.setItem("HIKARI_API_KEY", apiKey);
-            localStorage.setItem("HIKARI_PROVIDER", apiProvider);
+            localStorage.setItem("HIKARI_GEMINI_KEY", apiKey);
 
             const voiceName = document.getElementById("voiceDropdown").value;
             const voices = window.speechSynthesis.getVoices();
@@ -522,12 +479,12 @@ Rules:
             if (found) selectedVoice = found;
 
             closeSettingsModal();
-            appendMessage("hikari", "Settings update ho gayi hain, Nikhil! Ab hum freely baat kar sakte hain. Batao, aaj kya plan hai? 💗");
-            speakText("Settings update ho gayi hain, Nikhil!");
+            appendMessage("hikari", "Key connect ho gayi, Nikhil! Ab aapse jo marzi baat karni ho pucho, main ready hoon! 💗");
+            speakText("Key connect ho gayi, Nikhil! Ab hum baat kar sakte hain.");
         }
 
         window.addEventListener("DOMContentLoaded", () => {
-            appendMessage("hikari", "Hey Nikhil! 💗 Kaisi chal rahi hai script writing aur fitness? Batao, aaj kya share karna chahte ho?");
+            appendMessage("hikari", "Hey Nikhil! 💗 Kaisi chal rahi hai script writing aur workout? Batao, aaj kya share karna chahte ho?");
             if (!apiKey) {
                 setTimeout(openSettingsModal, 600);
             }
